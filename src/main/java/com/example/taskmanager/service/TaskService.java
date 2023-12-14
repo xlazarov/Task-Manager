@@ -3,20 +3,17 @@ package com.example.taskmanager.service;
 import com.example.taskmanager.data.*;
 import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.UpdateTaskRequest;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-
+@RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepository taskRepository;
-
-    public TaskService(TaskRepository taskRepository) {
-        this.taskRepository = taskRepository;
-    }
 
     public Task getTaskById(Integer taskId) {
         Optional<Task> task = taskRepository.findById(taskId);
