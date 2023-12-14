@@ -26,26 +26,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'jakarta.validation:jakarta.validation-api:3.1.0-M1'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	implementation 'org.flywaydb:flyway-core'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.spockframework:spock-core:2.4-M1-groovy-4.0'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.postgresql:postgresql'
-
-	// Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
-	// Testovacie závislosti
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.spockframework:spock-core:2.4-M1-groovy-4.0' // Spock pre unit testy
-
-	// SpringDoc pre OpenAPI (swagger) dokumentácie
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-
-	// Flyway pre databázovú migráciu
-	implementation 'org.flywaydb:flyway-core'
 }
 
 tasks.named('test') {
