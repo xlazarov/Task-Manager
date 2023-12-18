@@ -1,7 +1,6 @@
 package com.example.taskmanager.data;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Future;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -16,7 +15,6 @@ public class Task {
 
     private String description;
 
-    @Future(message = "Due date must be in the future")
     private LocalDate dueDate;
 
     @ManyToOne

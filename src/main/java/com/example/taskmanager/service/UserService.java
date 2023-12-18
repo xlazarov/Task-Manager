@@ -4,16 +4,14 @@ import com.example.taskmanager.data.AppUser;
 import com.example.taskmanager.data.UserRepository;
 import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public List<AppUser> getAllUsers() {
         return userRepository.findAll();
