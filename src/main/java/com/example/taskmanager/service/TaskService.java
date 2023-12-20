@@ -1,40 +1,64 @@
 package com.example.taskmanager.service;
 
-import com.example.taskmanager.data.*;
+import com.example.taskmanager.data.Task;
+import com.example.taskmanager.data.TaskMapper;
+import com.example.taskmanager.data.TaskRepository;
+import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
+import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RequiredArgsConstructor
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final TaskMapper taskMapper;
 
-    public Task getTaskById(Integer taskId) {
-        Optional<Task> task = taskRepository.findById(taskId);
-        return task.orElse(null);
+    public TaskResponse mapTaskToResponse(Task task) {
+        return taskMapper.taskToTaskResponse(task);
     }
 
-    public List<Task> getAllTasks() {
-        return taskRepository.findAll();
+    public List<TaskResponse> mapTaskToResponse(List<Task> tasks) {
+        return tasks.stream()
+                .map(taskMapper::taskToTaskResponse)
+                .collect(Collectors.toList());
     }
 
-    public Task addTask(CreateTaskRequest request) {
+    public TaskResponse getTaskById(Integer taskId) {
+        Task task = taskRepository.findById(taskId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, String.format("No task found for id (%s)", taskId)));
+        return mapTaskToResponse(task);
+    }
+
+    public List<TaskResponse> getAllTasks() {
+        List<Task> tasks = taskRepository.findAll();
+        return mapTaskToResponse(tasks);
+    }
+
+    public TaskResponse addTask(@Valid CreateTaskRequest request) {
         Task task = new Task();
         task.setDescription(request.description());
         task.setDueDate(request.dueDate());
         task.setAssignedUser(request.assignedUser());
         task.setState(request.state());
-        return taskRepository.save(task);
+        taskRepository.save(task);
+        return mapTaskToResponse(task);
     }
 
-    public Task updateTask(Integer id, UpdateTaskRequest request) {
-        Task task = taskRepository.getReferenceById(id);
+    public TaskResponse updateTask(Integer id, @Valid UpdateTaskRequest request) {
+        Task task = taskRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, String.format("No task found for id (%s)", id)));
 
         if (Objects.nonNull(request.description())) {
             task.setDescription(request.description());
@@ -48,23 +72,36 @@ public class TaskService {
         if (Objects.nonNull(request.state())) {
             task.setState(request.state());
         }
-        return taskRepository.save(task);
+        taskRepository.save(task);
+        return mapTaskToResponse(task);
     }
 
     public void deleteTask(Integer taskId) {
+        if (!taskRepository.existsById(taskId)) {
+            throw new ResponseStatusException(NOT_FOUND, String.format("No task found for id (%s)", taskId));
+        }
         taskRepository.deleteById(taskId);
     }
 
-    public List<Task> getTasksByState(TaskState state) {
-        return taskRepository.findByState(state);
+    public List<TaskResponse> getTasksByState(TaskState state) {
+        List<Task> tasks = taskRepository.findByState(state);
+        return mapTaskToResponse(tasks);
     }
 
-    public List<Task> getTasksForUser(Integer userId) {
-        return taskRepository.findByAssignedUserId(userId);
+    public List<TaskResponse> getTasksForUser(Integer userId) {
+        if (!taskRepository.existsByAssignedUserId(userId)) {
+            throw new ResponseStatusException(NOT_FOUND, String.format("No user found for id (%s)", userId));
+        }
+        List<Task> tasks = taskRepository.findByAssignedUserId(userId);
+        return mapTaskToResponse(tasks);
     }
 
-    public List<Task> getTasksByDueDate(LocalDate dueDate) {
-        return taskRepository.findByDueDate(dueDate);
+    public List<TaskResponse> getTasksByDueDate(LocalDate dueDate) {
+        if (dueDate.isBefore(LocalDate.now())) {
+            throw new ConstraintViolationException("Due date must be in the future", null);
+        }
+        List<Task> tasks = taskRepository.findByDueDate(dueDate);
+        return mapTaskToResponse(tasks);
     }
 
 }

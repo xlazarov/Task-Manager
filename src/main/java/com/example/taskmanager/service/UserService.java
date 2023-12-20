@@ -1,40 +1,63 @@
 package com.example.taskmanager.service;
 
 import com.example.taskmanager.data.AppUser;
+import com.example.taskmanager.data.UserMapper;
 import com.example.taskmanager.data.UserRepository;
 import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
+import com.example.taskmanager.dto.UserResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RequiredArgsConstructor
 public class UserService {
+
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public List<AppUser> getAllUsers() {
-        return userRepository.findAll();
+    public UserResponse mapUserToResponse(AppUser user) {
+        return userMapper.userToUserResponse(user);
     }
 
-    public AppUser getUserById(Integer userId) {
-        Optional<AppUser> user = userRepository.findById(userId);
-        return user.orElse(null);
+    public List<UserResponse> getAllUsers() {
+        List<AppUser> users = userRepository.findAll();
+        return users.stream()
+                .map(this::mapUserToResponse)
+                .collect(Collectors.toList());
     }
 
-    public AppUser addUser(CreateUserRequest request) {
+    public UserResponse getUserById(Integer userId) {
+        AppUser user = userRepository.findById(userId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, String.format("No user found for id (%s)", userId)));
+        return mapUserToResponse(user);
+    }
+
+    public UserResponse addUser(@Valid CreateUserRequest request) {
         AppUser user = new AppUser();
         user.setUsername(request.username());
-        return userRepository.save(user);
+        userRepository.save(user);
+        return mapUserToResponse(user);
     }
 
-    public AppUser updateUser(Integer userId, UpdateUserRequest request){
-        AppUser user = userRepository.getReferenceById(userId);
+    public UserResponse updateUser(Integer userId, @Valid UpdateUserRequest request) {
+        AppUser user = userRepository.findById(userId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, String.format("No user found for id (%s)", userId)));
+
         user.setUsername(request.username());
-        return userRepository.save(user);
+        userRepository.save(user);
+        return mapUserToResponse(user);
     }
 
     public void deleteUser(Integer userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new ResponseStatusException(NOT_FOUND, String.format("No task found for id (%s)", userId));
+        }
         userRepository.deleteById(userId);
     }
 }

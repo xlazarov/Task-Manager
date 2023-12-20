@@ -1,14 +1,22 @@
 package com.example.taskmanager.web;
 
-import com.example.taskmanager.data.Task;
 import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
+import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
 import com.example.taskmanager.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,31 +24,32 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/task")
 @RequiredArgsConstructor
+@Validated
 public class TaskController {
     private final TaskService taskService;
 
     @GetMapping("/")
-    public ResponseEntity<List<Task>> getAllTasks() {
-        List<Task> tasks = taskService.getAllTasks();
+    public ResponseEntity<List<TaskResponse>> getAllTasks() {
+        List<TaskResponse> tasks = taskService.getAllTasks();
         return ResponseEntity.ok(tasks);
     }
 
     @GetMapping("/{taskId}")
-    public ResponseEntity<Task> getTask(@PathVariable Integer taskId) {
-        Task task = taskService.getTaskById(taskId);
+    public ResponseEntity<TaskResponse> getTask(@PathVariable Integer taskId) {
+        TaskResponse task = taskService.getTaskById(taskId);
         return (task != null) ? ResponseEntity.ok(task) : ResponseEntity.notFound().build();
     }
 
     @PostMapping("/")
-    public ResponseEntity<Task> addTask(@RequestBody CreateTaskRequest request) {
-        Task createdTask = taskService.addTask(request);
+    public ResponseEntity<TaskResponse> addTask(@RequestBody CreateTaskRequest request) {
+        TaskResponse createdTask = taskService.addTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
     @PutMapping("/{taskId}")
-    public ResponseEntity<Task> updateTask(@PathVariable Integer taskId,
+    public ResponseEntity<TaskResponse> updateTask(@PathVariable Integer taskId,
                                            @RequestBody UpdateTaskRequest request) {
-        Task updatedTask = taskService.updateTask(taskId, request);
+        TaskResponse updatedTask = taskService.updateTask(taskId, request);
         return (updatedTask != null) ? ResponseEntity.ok(updatedTask) : ResponseEntity.notFound().build();
     }
 
@@ -51,20 +60,20 @@ public class TaskController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Task>> getTasksForUser(@PathVariable Integer userId) {
-        List<Task> userTasks = taskService.getTasksForUser(userId);
+    public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Integer userId) {
+        List<TaskResponse> userTasks = taskService.getTasksForUser(userId);
         return ResponseEntity.ok(userTasks);
     }
 
     @GetMapping("/state/{state}")
-    public ResponseEntity<List<Task>> getTasksByState(@PathVariable TaskState state) {
-        List<Task> tasksByState = taskService.getTasksByState(state);
+    public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable TaskState state) {
+        List<TaskResponse> tasksByState = taskService.getTasksByState(state);
         return ResponseEntity.ok(tasksByState);
     }
 
     @GetMapping("/date/{dueDate}")
-    public ResponseEntity<List<Task>> getTasksByDueDate(@PathVariable LocalDate dueDate) {
-        List<Task> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
+    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable LocalDate dueDate) {
+        List<TaskResponse> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
         return ResponseEntity.ok(tasksByDueDate);
     }
 
