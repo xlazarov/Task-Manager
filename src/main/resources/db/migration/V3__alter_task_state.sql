@@ -1,1 +1,0 @@
-ALTER TABLE "task" DROP CONSTRAINT task_state_check;
