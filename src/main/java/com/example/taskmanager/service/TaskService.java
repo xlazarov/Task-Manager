@@ -8,7 +8,6 @@ import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -46,7 +45,7 @@ public class TaskService {
         return mapTaskToResponse(tasks);
     }
 
-    public TaskResponse addTask(@Valid CreateTaskRequest request) {
+    public TaskResponse addTask(CreateTaskRequest request) {
         Task task = new Task();
         task.setDescription(request.description());
         task.setDueDate(request.dueDate());
@@ -56,7 +55,7 @@ public class TaskService {
         return mapTaskToResponse(task);
     }
 
-    public TaskResponse updateTask(Integer id, @Valid UpdateTaskRequest request) {
+    public TaskResponse updateTask(Integer id, UpdateTaskRequest request) {
         Task task = taskRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(NOT_FOUND, String.format("No task found for id (%s)", id)));
 

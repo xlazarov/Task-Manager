@@ -6,7 +6,6 @@ import com.example.taskmanager.data.UserRepository;
 import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
 import com.example.taskmanager.dto.UserResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -38,14 +37,14 @@ public class UserService {
         return mapUserToResponse(user);
     }
 
-    public UserResponse addUser(@Valid CreateUserRequest request) {
+    public UserResponse addUser(CreateUserRequest request) {
         AppUser user = new AppUser();
         user.setUsername(request.username());
         userRepository.save(user);
         return mapUserToResponse(user);
     }
 
-    public UserResponse updateUser(Integer userId, @Valid UpdateUserRequest request) {
+    public UserResponse updateUser(Integer userId, UpdateUserRequest request) {
         AppUser user = userRepository.findById(userId).orElseThrow(() ->
                 new ResponseStatusException(NOT_FOUND, String.format("No user found for id (%s)", userId)));
 

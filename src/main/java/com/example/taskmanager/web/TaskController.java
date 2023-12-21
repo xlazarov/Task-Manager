@@ -5,9 +5,12 @@ import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
 import com.example.taskmanager.service.TaskService;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,14 +44,24 @@ public class TaskController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<TaskResponse> addTask(@RequestBody CreateTaskRequest request) {
+    public ResponseEntity<TaskResponse> addTask(@Valid @RequestBody CreateTaskRequest request,
+                                                BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            if (bindingResult.hasErrors()) {
+                throw new ConstraintViolationException(bindingResult.toString(), null);
+            }
+        }
         TaskResponse createdTask = taskService.addTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
     }
 
     @PutMapping("/{taskId}")
     public ResponseEntity<TaskResponse> updateTask(@PathVariable Integer taskId,
-                                           @RequestBody UpdateTaskRequest request) {
+                                                   @Valid @RequestBody UpdateTaskRequest request,
+                                                   BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            throw new ConstraintViolationException(bindingResult.toString(), null);
+        }
         TaskResponse updatedTask = taskService.updateTask(taskId, request);
         return (updatedTask != null) ? ResponseEntity.ok(updatedTask) : ResponseEntity.notFound().build();
     }
