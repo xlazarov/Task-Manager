@@ -14,6 +14,8 @@ Simple Spring Boot app for managing tasks and users. If too simple, I'll elevate
 - Hibernate (JPA)
 - Lombok
 - Swagger (OpenAPI)
+- Flyway
+- PostgreSQL
 - ...
 
 ## API documentation

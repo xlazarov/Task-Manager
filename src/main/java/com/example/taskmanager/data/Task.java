@@ -18,7 +18,7 @@ public class Task {
     private LocalDate dueDate;
 
     @ManyToOne
-    //@JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id")
     private AppUser assignedUser;
 
     @Enumerated(EnumType.STRING)

@@ -1,0 +1,12 @@
+services:
+
+  db:
+    image: postgres
+    ports:
+      - "5332:5432"
+    restart: always
+    environment:
+      POSTGRES_DB: task-manager
+      POSTGRES_USER: keta
+      POSTGRES_PASSWORD: password
+
