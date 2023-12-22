@@ -4,9 +4,12 @@ import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
 import com.example.taskmanager.dto.UserResponse;
 import com.example.taskmanager.service.UserService;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,14 +42,26 @@ public class UserController {
     }
 
     @PostMapping("/")
-    public ResponseEntity<UserResponse> addUser(@RequestBody CreateUserRequest request) {
+    public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateUserRequest request,
+                                                BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            if (bindingResult.hasErrors()) {
+                throw new ConstraintViolationException(bindingResult.toString(), null);
+            }
+        }
         UserResponse createdUser = userService.addUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
     @PutMapping("/{userId}")
     public ResponseEntity<UserResponse> updateUser(@PathVariable("userId") Integer id,
-                                              @RequestBody UpdateUserRequest request) {
+                                                   @Valid @RequestBody UpdateUserRequest request,
+                                                   BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            if (bindingResult.hasErrors()) {
+                throw new ConstraintViolationException(bindingResult.toString(), null);
+            }
+        }
         UserResponse updatedUser = userService.updateUser(id, request);
         return (updatedUser != null) ? ResponseEntity.ok(updatedUser) : ResponseEntity.notFound().build();
     }

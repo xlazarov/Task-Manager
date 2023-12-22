@@ -21,7 +21,6 @@ public class Task {
     @JoinColumn(name = "user_id")
     private AppUser assignedUser;
 
-    @Enumerated(EnumType.STRING)
-    private TaskState state;
+    private String state;
 }
 

@@ -1,6 +1,5 @@
 package com.example.taskmanager.web;
 
-import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
@@ -47,9 +46,7 @@ public class TaskController {
     public ResponseEntity<TaskResponse> addTask(@Valid @RequestBody CreateTaskRequest request,
                                                 BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            if (bindingResult.hasErrors()) {
-                throw new ConstraintViolationException(bindingResult.toString(), null);
-            }
+            throw new ConstraintViolationException(bindingResult.toString(), null);
         }
         TaskResponse createdTask = taskService.addTask(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
@@ -79,7 +76,7 @@ public class TaskController {
     }
 
     @GetMapping("/state/{state}")
-    public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable TaskState state) {
+    public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable String state) {
         List<TaskResponse> tasksByState = taskService.getTasksByState(state);
         return ResponseEntity.ok(tasksByState);
     }

@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -82,7 +83,13 @@ public class TaskService {
         taskRepository.deleteById(taskId);
     }
 
-    public List<TaskResponse> getTasksByState(TaskState state) {
+    public List<TaskResponse> getTasksByState(String state) {
+        if (!Stream.of(TaskState.values())
+                .map(Enum::name)
+                .toList()
+                .contains(state)) {
+            throw new ConstraintViolationException("Invalid task state", null);
+        }
         List<Task> tasks = taskRepository.findByState(state);
         return mapTaskToResponse(tasks);
     }

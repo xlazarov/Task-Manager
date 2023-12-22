@@ -9,5 +9,5 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByDueDate(LocalDate dueDate);
     List<Task> findByAssignedUserId(Integer userId);
     Boolean existsByAssignedUserId(Integer userId);
-    List<Task> findByState(TaskState state);
+    List<Task> findByState(String state);
 }
