@@ -2,6 +2,7 @@ package com.example.taskmanager.dto;
 
 import com.example.taskmanager.data.AppUser;
 import com.example.taskmanager.data.TaskState;
+import com.example.taskmanager.validation.ExistsInDb;
 import com.example.taskmanager.validation.ValidateTaskState;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Future;
@@ -15,6 +16,7 @@ public record UpdateTaskRequest(
         @Future(message = "Due date must be in the future")
         LocalDate dueDate,
         @Valid
+        @ExistsInDb
         AppUser assignedUser,
         @ValidateTaskState(
                 enumClass = TaskState.class,
