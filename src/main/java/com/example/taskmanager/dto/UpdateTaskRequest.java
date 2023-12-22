@@ -18,8 +18,6 @@ public record UpdateTaskRequest(
         @Valid
         @ExistsInDb
         AppUser assignedUser,
-        @ValidateTaskState(
-                enumClass = TaskState.class,
-                message = "Must be TODO, IN_PROGRESS or COMPLETED")
+        @ValidateTaskState
         String state) {
 }

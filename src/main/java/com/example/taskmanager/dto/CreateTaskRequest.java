@@ -20,9 +20,7 @@ public record CreateTaskRequest(
         @Valid
         @ExistsInDb
         AppUser assignedUser,
-        @ValidateTaskState(
-                enumClass = TaskState.class,
-                message = "Must be TODO, IN_PROGRESS or COMPLETED")
+        @ValidateTaskState
         String state) {
     public CreateTaskRequest {
         state = (state != null) ? state : "TODO";
