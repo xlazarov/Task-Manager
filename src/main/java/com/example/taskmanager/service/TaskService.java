@@ -163,4 +163,16 @@ public class TaskService {
         List<Task> tasks = taskRepository.findByDueDate(dueDate);
         return mapTaskToResponse(tasks);
     }
+
+    public void updateTaskStateForOverdueTasks() {
+        List<Task> overdueTasks = taskRepository.findByDueDate(LocalDate.now());
+
+        for (Task task : overdueTasks) {
+            if (task.getState().equals("TODO")) {
+                task.setState("DELAYED");
+                taskRepository.save(task);
+            }
+        }
+    }
+
 }

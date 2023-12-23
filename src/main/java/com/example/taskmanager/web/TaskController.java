@@ -7,7 +7,7 @@ import com.example.taskmanager.service.TaskService;
 import com.example.taskmanager.validation.ValidateTaskState;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -133,7 +133,7 @@ public class TaskController {
      * @return List of tasks and HTTP status OK.
      */
     @GetMapping("/date/{dueDate}")
-    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable @Future LocalDate dueDate) {
+    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable @FutureOrPresent LocalDate dueDate) {
         List<TaskResponse> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
         return ResponseEntity.ok(tasksByDueDate);
     }

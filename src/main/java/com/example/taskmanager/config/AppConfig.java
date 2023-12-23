@@ -7,6 +7,7 @@ import com.example.taskmanager.data.UserRepository;
 import com.example.taskmanager.service.TaskService;
 import com.example.taskmanager.service.UserService;
 import org.mapstruct.factory.Mappers;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;
@@ -26,12 +27,18 @@ public class AppConfig {
     }
 
     @Bean
-    public TaskMapper taskMapper(){
+    public TaskMapper taskMapper() {
         return Mappers.getMapper(TaskMapper.class);
     }
 
     @Bean
-    public UserMapper userMapper(){
+    public UserMapper userMapper() {
         return Mappers.getMapper(UserMapper.class);
+    }
+
+    @Bean
+    @ConfigurationProperties(prefix = "task-scheduler")
+    public TaskSchedulerConfig taskSchedulerConfig(TaskService taskService) {
+        return new TaskSchedulerConfig(taskService);
     }
 }
