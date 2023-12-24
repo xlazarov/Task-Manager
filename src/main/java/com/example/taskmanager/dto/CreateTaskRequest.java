@@ -23,6 +23,6 @@ public record CreateTaskRequest(
         @ValidateTaskState
         String state) {
     public CreateTaskRequest {
-        state = (state != null) ? state : "TODO";
+        state = (state != null) ? state : TaskState.TODO.name();
     }
 }
