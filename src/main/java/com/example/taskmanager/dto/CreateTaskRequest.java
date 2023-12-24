@@ -1,6 +1,7 @@
 package com.example.taskmanager.dto;
 
 import com.example.taskmanager.data.AppUser;
+import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.validation.ExistsInDb;
 import com.example.taskmanager.validation.ValidateTaskState;
 import jakarta.validation.Valid;
@@ -22,6 +23,6 @@ public record CreateTaskRequest(
         @ValidateTaskState
         String state) {
     public CreateTaskRequest {
-        state = (state != null) ? state : "TODO";
+        state = (state != null) ? state : TaskState.TODO.name();
     }
 }

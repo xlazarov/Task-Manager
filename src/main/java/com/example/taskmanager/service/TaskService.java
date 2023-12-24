@@ -3,6 +3,7 @@ package com.example.taskmanager.service;
 import com.example.taskmanager.data.Task;
 import com.example.taskmanager.data.TaskMapper;
 import com.example.taskmanager.data.TaskRepository;
+import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
@@ -168,8 +169,8 @@ public class TaskService {
         List<Task> overdueTasks = taskRepository.findByDueDate(LocalDate.now());
 
         for (Task task : overdueTasks) {
-            if (task.getState().equals("TODO")) {
-                task.setState("DELAYED");
+            if (task.getState().equals(TaskState.TODO.name())) {
+                task.setState(TaskState.DELAYED.name());
                 taskRepository.save(task);
             }
         }
