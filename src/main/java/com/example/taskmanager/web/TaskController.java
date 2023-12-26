@@ -9,6 +9,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.FutureOrPresent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -32,6 +33,7 @@ import java.util.List;
 @RequestMapping("/api/task")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class TaskController {
     private final TaskService taskService;
 
@@ -42,6 +44,7 @@ public class TaskController {
      */
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
+        log.info("Endpoint /api/task called: getAllTasks");
         List<TaskResponse> tasks = taskService.getAllTasks();
         return ResponseEntity.ok(tasks);
     }
@@ -54,6 +57,7 @@ public class TaskController {
      */
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskResponse> getTask(@PathVariable Integer taskId) {
+        log.info("Endpoint /api/task called: getAllTasks");
         TaskResponse task = taskService.getTaskById(taskId);
         return (task != null) ? ResponseEntity.ok(task) : ResponseEntity.notFound().build();
     }
@@ -65,10 +69,12 @@ public class TaskController {
      * @return Created task and HTTP status CREATED if successful, or BAD_REQUEST if validation fails.
      * @throws ConstraintViolationException if there are validation errors.
      */
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<TaskResponse> addTask(@Valid @RequestBody CreateTaskRequest request,
                                                 BindingResult bindingResult) {
+        log.info("Endpoint /api/task called: addTask");
         if (bindingResult.hasErrors()) {
+            log.error("Validation error occurred while adding a task. Details: {}", bindingResult);
             throw new ConstraintViolationException(bindingResult.toString(), null);
         }
         TaskResponse createdTask = taskService.addTask(request);
@@ -87,7 +93,9 @@ public class TaskController {
     public ResponseEntity<TaskResponse> updateTask(@PathVariable Integer taskId,
                                                    @Valid @RequestBody UpdateTaskRequest request,
                                                    BindingResult bindingResult) {
+        log.info("Endpoint /api/task called: updateTask");
         if (bindingResult.hasErrors()) {
+            log.error("Validation error occurred while updating a task. Details: {}", bindingResult);
             throw new ConstraintViolationException(bindingResult.toString(), null);
         }
         TaskResponse updatedTask = taskService.updateTask(taskId, request);
@@ -100,9 +108,10 @@ public class TaskController {
      * @return Success message and HTTP status OK.
      */
     @DeleteMapping("/{taskId}")
-    public ResponseEntity<?> deleteTask(@PathVariable Integer taskId) {
+    public ResponseEntity<Void> deleteTask(@PathVariable Integer taskId) {
+        log.info("Endpoint /api/task called: deleteTask");
         taskService.deleteTask(taskId);
-        return ResponseEntity.ok("Task deleted successfully.");
+        return ResponseEntity.noContent().build();
     }
 
     /**
@@ -112,6 +121,7 @@ public class TaskController {
      */
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/task/user called: getTasksForUser");
         List<TaskResponse> userTasks = taskService.getTasksForUser(userId);
         return ResponseEntity.ok(userTasks);
     }
@@ -123,6 +133,7 @@ public class TaskController {
      */
     @GetMapping("/state/{state}")
     public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable @ValidateTaskState String state) {
+        log.info("Endpoint /api/task/state called: getTasksByState");
         List<TaskResponse> tasksByState = taskService.getTasksByState(state);
         return ResponseEntity.ok(tasksByState);
     }
@@ -134,6 +145,7 @@ public class TaskController {
      */
     @GetMapping("/date/{dueDate}")
     public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable @FutureOrPresent LocalDate dueDate) {
+        log.info("Endpoint /api/task/date called: getTasksByDueDate");
         List<TaskResponse> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
         return ResponseEntity.ok(tasksByDueDate);
     }

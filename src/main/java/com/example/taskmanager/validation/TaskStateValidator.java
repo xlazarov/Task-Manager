@@ -39,7 +39,6 @@ public class TaskStateValidator implements ConstraintValidator<ValidateTaskState
         if (value == null) {
             return true;
         }
-
         return acceptedValues.contains(value.toString());
     }
 }

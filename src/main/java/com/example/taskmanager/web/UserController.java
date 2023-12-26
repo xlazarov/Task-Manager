@@ -7,6 +7,7 @@ import com.example.taskmanager.service.UserService;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class UserController {
     private final UserService userService;
 
@@ -37,8 +39,9 @@ public class UserController {
      *
      * @return List of users and HTTP status OK.
      */
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
+        log.info("Endpoint /api/user called: getAllUsers");
         List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
@@ -51,13 +54,15 @@ public class UserController {
      */
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/user called: getUser");
         UserResponse user = userService.getUserById(userId);
         return (user != null) ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
     /**
      * Adds a new user.
-     * @param request The request body containing user details.
+     *
+     * @param request       The request body containing user details.
      * @param bindingResult The result of the validation.
      * @return Created user and HTTP status CREATED if successful, or BAD_REQUEST if validation fails.
      * @throws ConstraintViolationException if there are validation errors.
@@ -65,10 +70,10 @@ public class UserController {
     @PostMapping("/")
     public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateUserRequest request,
                                                 BindingResult bindingResult) {
+        log.info("Endpoint /api/user called: addUser");
         if (bindingResult.hasErrors()) {
-            if (bindingResult.hasErrors()) {
-                throw new ConstraintViolationException(bindingResult.toString(), null);
-            }
+            log.error("Validation error occurred while adding a user. Details: {}", bindingResult);
+            throw new ConstraintViolationException(bindingResult.toString(), null);
         }
         UserResponse createdUser = userService.addUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
@@ -76,8 +81,9 @@ public class UserController {
 
     /**
      * Updates an existing user.
-     * @param userId The ID of the user to update.
-     * @param request The request body containing updated user details.
+     *
+     * @param userId        The ID of the user to update.
+     * @param request       The request body containing updated user details.
      * @param bindingResult The result of the validation.
      * @return Updated user and HTTP status OK if successful, or NOT_FOUND if the task is not found.
      * @throws ConstraintViolationException if there are validation errors.
@@ -86,10 +92,10 @@ public class UserController {
     public ResponseEntity<UserResponse> updateUser(@PathVariable Integer userId,
                                                    @Valid @RequestBody UpdateUserRequest request,
                                                    BindingResult bindingResult) {
+        log.info("Endpoint /api/user called: updateUser");
         if (bindingResult.hasErrors()) {
-            if (bindingResult.hasErrors()) {
-                throw new ConstraintViolationException(bindingResult.toString(), null);
-            }
+            log.error("Validation error occurred while updating a user. Details: {}", bindingResult);
+            throw new ConstraintViolationException(bindingResult.toString(), null);
         }
         UserResponse updatedUser = userService.updateUser(userId, request);
         return (updatedUser != null) ? ResponseEntity.ok(updatedUser) : ResponseEntity.notFound().build();
@@ -97,12 +103,14 @@ public class UserController {
 
     /**
      * Deletes a user by ID.
+     *
      * @param userId The ID of the user to delete.
      * @return Success message and HTTP status OK.
      */
     @DeleteMapping("/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/user called: deleteUser");
         userService.deleteUser(userId);
-        return ResponseEntity.ok("User deleted successfully.");
+        return ResponseEntity.noContent().build();
     }
 }
