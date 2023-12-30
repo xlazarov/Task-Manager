@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 @Mapper
 public interface TaskMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "dueDate", target = "dueDate", dateFormat = "dd-MM-yyyy")
     @Mapping(source = "assignedUser", target = "assignedUser")

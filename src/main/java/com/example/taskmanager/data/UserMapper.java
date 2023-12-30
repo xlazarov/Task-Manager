@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 @Mapper
 public interface UserMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "username", target = "username")
     UserResponse userToUserResponse(AppUser user);
 }
