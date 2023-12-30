@@ -1,5 +1,9 @@
 package com.example.taskmanager.dto;
 
-public record CreateUserRequest(String username) {
+import jakarta.validation.constraints.NotBlank;
+
+public record CreateUserRequest(
+        @NotBlank(message = "Username must not be blank")
+        String username) {
 }
 

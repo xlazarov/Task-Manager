@@ -1,7 +1,7 @@
 package com.example.taskmanager.data;
 
 public enum TaskState {
-    NOT_COMPLETED,
+    TODO,
     IN_PROGRESS,
     COMPLETED
 }
