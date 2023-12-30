@@ -1,15 +1,17 @@
 package com.example.taskmanager.web;
 
+import com.example.taskmanager.data.AppUser;
+import com.example.taskmanager.data.UserMapper;
 import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
 import com.example.taskmanager.dto.UserResponse;
 import com.example.taskmanager.service.UserService;
-import jakarta.validation.ConstraintViolationException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Controller layer for handling HTTP requests related to user management.
@@ -30,17 +34,46 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class UserController {
+
     private final UserService userService;
+    private final UserMapper userMapper;
+
+
+    /**
+     * Maps a single User entity to a UserResponse DTO.
+     *
+     * @param user The User entity to map.
+     * @return The corresponding UserResponse DTO.
+     */
+    public UserResponse mapUserToResponse(AppUser user) {
+        return userMapper.userToUserResponse(user);
+    }
+
+    /**
+     * Maps a list of User entities to a list of UserResponse DTOs.
+     *
+     * @param users The list of User entities to map.
+     * @return The corresponding list of UserResponse DTOs.
+     */
+    public List<UserResponse> mapUserToResponse(List<AppUser> users) {
+        return users.stream()
+                .map(this::mapUserToResponse)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Retrieves all users.
      *
      * @return List of users and HTTP status OK.
      */
-    @GetMapping("/")
+    @Operation(summary = "Get all users", responses = {
+            @ApiResponse(responseCode = "200", description = "List of users")
+    })
+    @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
-        List<UserResponse> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+        List<AppUser> users = userService.getAllUsers();
+        List<UserResponse> userResponses = mapUserToResponse(users);
+        return ResponseEntity.ok(userResponses);
     }
 
     /**
@@ -49,60 +82,71 @@ public class UserController {
      * @param userId The ID of the user to retrieve.
      * @return User and HTTP status OK if found, or NOT_FOUND if not found.
      */
+    @Operation(summary = "Get a user by ID", responses = {
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Integer userId) {
-        UserResponse user = userService.getUserById(userId);
-        return (user != null) ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+        Optional<AppUser> user = userService.getUserById(userId);
+        if (user.isPresent()) {
+            UserResponse userResponse = mapUserToResponse(user.get());
+            return ResponseEntity.ok(userResponse);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     /**
      * Adds a new user.
+     *
      * @param request The request body containing user details.
-     * @param bindingResult The result of the validation.
      * @return Created user and HTTP status CREATED if successful, or BAD_REQUEST if validation fails.
-     * @throws ConstraintViolationException if there are validation errors.
      */
-    @PostMapping("/")
-    public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateUserRequest request,
-                                                BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            if (bindingResult.hasErrors()) {
-                throw new ConstraintViolationException(bindingResult.toString(), null);
-            }
-        }
-        UserResponse createdUser = userService.addUser(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+    @Operation(summary = "Add a new user", responses = {
+            @ApiResponse(responseCode = "201", description = "User created"),
+            @ApiResponse(responseCode = "400", description = "Bad request")
+    })
+    @PostMapping
+    public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateUserRequest request) {
+        AppUser createdUser = userService.addUser(request);
+        UserResponse userResponse = mapUserToResponse(createdUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
     }
 
     /**
      * Updates an existing user.
-     * @param userId The ID of the user to update.
+     *
+     * @param userId  The ID of the user to update.
      * @param request The request body containing updated user details.
-     * @param bindingResult The result of the validation.
-     * @return Updated user and HTTP status OK if successful, or NOT_FOUND if the task is not found.
-     * @throws ConstraintViolationException if there are validation errors.
+     * @return Appropriate HTTP status.
      */
+    @Operation(summary = "Update an existing user", responses = {
+            @ApiResponse(responseCode = "204", description = "User updated"),
+            @ApiResponse(responseCode = "400", description = "Bad request"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @PutMapping("/{userId}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Integer userId,
-                                                   @Valid @RequestBody UpdateUserRequest request,
-                                                   BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            if (bindingResult.hasErrors()) {
-                throw new ConstraintViolationException(bindingResult.toString(), null);
-            }
+    public ResponseEntity<Void> updateUser(@PathVariable Integer userId,
+                                                   @Valid @RequestBody UpdateUserRequest request) {
+        Optional<AppUser> updatedUser = userService.updateUser(userId, request);
+        if (updatedUser.isPresent()) {
+            return ResponseEntity.noContent().build();
         }
-        UserResponse updatedUser = userService.updateUser(userId, request);
-        return (updatedUser != null) ? ResponseEntity.ok(updatedUser) : ResponseEntity.notFound().build();
+        return ResponseEntity.notFound().build();
     }
 
     /**
      * Deletes a user by ID.
+     *
      * @param userId The ID of the user to delete.
-     * @return Success message and HTTP status OK.
+     * @return No Content success HTTP status.
      */
+    @Operation(summary = "Delete a user by ID", responses = {
+            @ApiResponse(responseCode = "204", description = "User deleted")
+    })
     @DeleteMapping("/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Integer userId) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
         userService.deleteUser(userId);
-        return ResponseEntity.ok("User deleted successfully.");
+        return ResponseEntity.noContent().build();
     }
 }
