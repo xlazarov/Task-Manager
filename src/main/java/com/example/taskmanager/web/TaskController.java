@@ -129,7 +129,7 @@ public class TaskController {
     })
     @PutMapping("/{taskId}")
     public ResponseEntity<Void> updateTask(@PathVariable Integer taskId,
-                                                   @Valid @RequestBody UpdateTaskRequest request) {
+                                           @Valid @RequestBody UpdateTaskRequest request) {
         Optional<Task> updatedTask = taskService.updateTask(taskId, request);
         if (updatedTask.isPresent()) {
             return ResponseEntity.noContent().build();
@@ -159,17 +159,13 @@ public class TaskController {
      * @return List of tasks and HTTP status OK if user exists, NOT_FOUND otherwise.
      */
     @Operation(summary = "Get tasks by assigned user ID", responses = {
-            @ApiResponse(responseCode = "200", description = "List of tasks by assigned user"),
-            @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "List of tasks by assigned user")
     })
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Integer userId) {
-        Optional<List<Task>> userTasks = taskService.getTasksForUser(userId);
-        if (userTasks.isPresent()) {
-            List<TaskResponse> responses = mapTaskToResponse(userTasks.get());
-            return ResponseEntity.ok(responses);
-        }
-        return ResponseEntity.notFound().build();
+        List<Task> userTasks = taskService.getTasksForUser(userId);
+        List<TaskResponse> responses = mapTaskToResponse(userTasks);
+        return ResponseEntity.ok(responses);
     }
 
     /**
