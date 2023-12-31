@@ -4,15 +4,15 @@ import com.example.taskmanager.data.AppUser;
 import com.example.taskmanager.validation.ExistsInDb;
 import com.example.taskmanager.validation.ValidateTaskState;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalDate;
 
 public record UpdateTaskRequest(
-        @NotBlank(message = "Description must not be blank")
+        @Pattern(regexp = "^(?!\\s*$).+", message = "Description must not be blank")
         String description,
-        @FutureOrPresent(message = "Due date must be in the future")
+        @Future(message = "Due date must be in the future")
         LocalDate dueDate,
         @Valid
         @ExistsInDb
