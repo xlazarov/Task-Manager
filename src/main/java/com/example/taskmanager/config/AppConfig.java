@@ -17,13 +17,13 @@ import org.springframework.context.annotation.EnableMBeanExport;
 public class AppConfig {
 
     @Bean
-    public TaskService taskService(TaskRepository taskRepository, TaskMapper taskMapper) {
-        return new TaskService(taskRepository, taskMapper);
+    public TaskService taskService(TaskRepository taskRepository) {
+        return new TaskService(taskRepository);
     }
 
     @Bean
-    public UserService userService(UserRepository userRepository, UserMapper userMapper) {
-        return new UserService(userRepository, userMapper);
+    public UserService userService(UserRepository userRepository) {
+        return new UserService(userRepository);
     }
 
     @Bean
