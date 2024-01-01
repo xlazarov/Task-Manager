@@ -131,7 +131,7 @@ public class TaskService {
     }
 
     public void updateTaskStateForOverdueTasks() {
-        List<Task> overdueTasks = taskRepository.findByDueDate(LocalDate.now());
+        List<Task> overdueTasks = taskRepository.findByDueDate(LocalDate.now().minusDays(1));
 
         for (Task task : overdueTasks) {
             if (task.getState().equals(TaskState.TODO.name())) {
