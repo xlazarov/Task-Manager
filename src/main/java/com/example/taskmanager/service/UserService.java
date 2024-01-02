@@ -6,6 +6,7 @@ import com.example.taskmanager.dto.CreateUserRequest;
 import com.example.taskmanager.dto.UpdateUserRequest;
 import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * Service layer responsible for managing users.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -27,6 +29,7 @@ public class UserService {
      */
     @Nonnull
     public List<AppUser> getAllUsers() {
+        log.info("Fetching all users");
         return userRepository.findAll();
     }
 
@@ -38,6 +41,7 @@ public class UserService {
      */
     @Nonnull
     public Optional<AppUser> getUserById(@Nonnull Integer userId) {
+        log.info("Fetching user with id: {}", userId);
         return userRepository.findById(userId);
     }
 
@@ -49,9 +53,11 @@ public class UserService {
      */
     @Nonnull
     public AppUser addUser(@Nonnull CreateUserRequest request) {
+        log.info("Adding a new user: {}", request);
         AppUser user = new AppUser();
         user.setUsername(request.username());
         userRepository.save(user);
+        log.info("Added a new user: {}", user);
         return user;
     }
 
@@ -64,10 +70,12 @@ public class UserService {
      */
     @Nonnull
     public Optional<AppUser> updateUser(@Nonnull Integer userId, @Nonnull UpdateUserRequest request) {
+        log.info("Updating user with id {}: {}", userId, request);
         Optional<AppUser> user = userRepository.findById(userId);
         if (user.isPresent()) {
             user.get().setUsername(request.username());
             userRepository.save(user.get());
+            log.info("Updated user: {}", user.get());
         }
         return user;
     }
@@ -78,6 +86,7 @@ public class UserService {
      * @param userId The unique identifier of the user to delete.
      */
     public void deleteUser(@Nonnull Integer userId) {
+        log.info("Deleting user with id: {}", userId);
         userRepository.deleteById(userId);
     }
 }

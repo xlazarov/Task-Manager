@@ -1,6 +1,7 @@
 package com.example.taskmanager.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +17,7 @@ import java.util.Map;
  * Handles various exceptions and translates them into appropriate HTTP responses.
  */
 @RestControllerAdvice
+@Slf4j
 public class ErrorHandler {
 
 
@@ -28,6 +30,7 @@ public class ErrorHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleConstraintViolationException(ConstraintViolationException e) {
+        log.error("Validation failed with ConstraintViolationException: {}", e.getMessage());
         Map<String, String> errorMap = new HashMap<>();
         e.getConstraintViolations().forEach(violation ->
                 errorMap.put(violation.getPropertyPath().toString(), violation.getMessage()));
@@ -43,6 +46,7 @@ public class ErrorHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException e) {
+        log.error("Validation failed with MethodArgumentNotValidException: {}", e.getMessage());
         Map<String, String> errorMap = new HashMap<>();
         e.getBindingResult().getFieldErrors().forEach(error ->
                 errorMap.put(error.getField(), error.getDefaultMessage()));
@@ -58,6 +62,7 @@ public class ErrorHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<String> handleException(Exception e) {
+        log.error("An unexpected error occurred: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
 }
