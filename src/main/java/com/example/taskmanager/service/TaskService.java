@@ -104,7 +104,7 @@ public class TaskService {
      * @return List of tasks with the specified state.
      */
     @Nonnull
-    public List<Task> getTasksByState(@Nonnull String state) {
+    public List<Task> getTasksByState(@Nonnull TaskState state) {
         return taskRepository.findByState(state);
     }
 
@@ -131,14 +131,11 @@ public class TaskService {
     }
 
     public void updateTaskStateForOverdueTasks() {
-        List<Task> overdueTasks = taskRepository.findByDueDate(LocalDate.now().minusDays(1));
+        List<Task> overdueTasks = taskRepository.findByDueDateAndState(LocalDate.now(), TaskState.TODO);
 
         for (Task task : overdueTasks) {
-            if (task.getState().equals(TaskState.TODO.name())) {
-                task.setState(TaskState.DELAYED.name());
-                taskRepository.save(task);
-            }
+            task.setState(TaskState.DELAYED);
+            taskRepository.save(task);
         }
     }
-
 }
