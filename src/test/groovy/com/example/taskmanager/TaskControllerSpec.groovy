@@ -83,7 +83,7 @@ class TaskControllerSpec extends Specification {
         def request = new UpdateTaskRequest(null, null, null, state as TaskState)
 
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), TaskResponse)
+        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
 
         then:
         response.statusCode == expectedStatusCode
@@ -95,6 +95,7 @@ class TaskControllerSpec extends Specification {
         TaskState.COMPLETED   | HttpStatus.NO_CONTENT
         TaskState.DELAYED     | HttpStatus.NO_CONTENT
         "InvalidState"        | HttpStatus.BAD_REQUEST
+        null                  | HttpStatus.BAD_REQUEST
     }
 
     @Unroll
@@ -103,7 +104,7 @@ class TaskControllerSpec extends Specification {
         def request = new UpdateTaskRequest(null, dueDate, null, null)
 
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), TaskResponse)
+        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
 
         then:
         response.statusCode == expectedStatusCode
