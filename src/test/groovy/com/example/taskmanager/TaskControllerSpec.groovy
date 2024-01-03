@@ -35,8 +35,8 @@ class TaskControllerSpec extends Specification {
     CreateTaskRequest createTaskRequest
 
     def setupSpec() {
-        updateTaskRequest = new UpdateTaskRequest("UpdatedTask", LocalDate.now().plusDays(7), null, TaskState.IN_PROGRESS.name())
-        createTaskRequest = new CreateTaskRequest("TestTask", null, null, TaskState.TODO.name())
+        updateTaskRequest = new UpdateTaskRequest("UpdatedTask", LocalDate.now().plusDays(7), null, TaskState.IN_PROGRESS)
+        createTaskRequest = new CreateTaskRequest("TestTask", null, null, TaskState.TODO)
 
         def taskResponse = restTemplate.postForEntity("http://localhost:${port}/api/task", createTaskRequest, TaskResponse)
         assert taskResponse.statusCode == HttpStatus.CREATED
@@ -46,7 +46,7 @@ class TaskControllerSpec extends Specification {
     @Unroll
     def "should add a new task with description '#description'"() {
         given:
-        def request = new CreateTaskRequest(description, null, null, TaskState.TODO.name())
+        def request = new CreateTaskRequest(description, null, null, TaskState.TODO)
 
         when:
         def response = restTemplate.postForEntity("http://localhost:${port}/api/task", request, TaskResponse)
@@ -80,7 +80,7 @@ class TaskControllerSpec extends Specification {
     @Unroll
     def "should update the state of an existing task to '#state' or return bad request"() {
         given:
-        def request = new UpdateTaskRequest(null, null, null, state)
+        def request = new UpdateTaskRequest(null, null, null, state as TaskState)
 
         when:
         def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), TaskResponse)
@@ -89,12 +89,12 @@ class TaskControllerSpec extends Specification {
         response.statusCode == expectedStatusCode
 
         where:
-        state                        | expectedStatusCode
-        TaskState.TODO.name()        | HttpStatus.NO_CONTENT
-        TaskState.IN_PROGRESS.name() | HttpStatus.NO_CONTENT
-        TaskState.COMPLETED.name()   | HttpStatus.NO_CONTENT
-        TaskState.DELAYED.name()     | HttpStatus.NO_CONTENT
-        "InvalidState"               | HttpStatus.BAD_REQUEST
+        state                 | expectedStatusCode
+        TaskState.TODO        | HttpStatus.NO_CONTENT
+        TaskState.IN_PROGRESS | HttpStatus.NO_CONTENT
+        TaskState.COMPLETED   | HttpStatus.NO_CONTENT
+        TaskState.DELAYED     | HttpStatus.NO_CONTENT
+        "InvalidState"        | HttpStatus.BAD_REQUEST
     }
 
     @Unroll
@@ -110,9 +110,9 @@ class TaskControllerSpec extends Specification {
 
         where:
         dueDate                      | expectedStatusCode
-       // LocalDate.now()              | HttpStatus.BAD_REQUEST
+        LocalDate.now()              | HttpStatus.BAD_REQUEST
         LocalDate.now().plusDays(7)  | HttpStatus.NO_CONTENT
-       // LocalDate.now().minusDays(7) | HttpStatus.BAD_REQUEST
+        LocalDate.now().minusDays(7) | HttpStatus.BAD_REQUEST
         null                         | HttpStatus.NO_CONTENT
     }
 

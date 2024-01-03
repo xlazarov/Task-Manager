@@ -11,7 +11,7 @@ import java.util.stream.Stream;
  * Custom validator for the {@link ValidateTaskState} annotation.
  * This validator ensures that a task state is one of the specified values.
  */
-public class TaskStateValidator implements ConstraintValidator<ValidateTaskState, CharSequence> {
+public class TaskStateValidator implements ConstraintValidator<ValidateTaskState, Object> {
 
     private List<String> acceptedValues;
 
@@ -35,7 +35,7 @@ public class TaskStateValidator implements ConstraintValidator<ValidateTaskState
      * @return true if the value is valid, false otherwise.
      */
     @Override
-    public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
         if (value == null) {
             return true;
         }

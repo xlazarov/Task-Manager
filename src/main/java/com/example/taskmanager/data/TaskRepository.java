@@ -11,5 +11,7 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
 
     List<Task> findByAssignedUserId(Integer userId);
 
-    List<Task> findByState(String state);
+    List<Task> findByState(TaskState state);
+
+    List<Task> findByDueDateAndState(LocalDate dueDate, TaskState state);
 }
