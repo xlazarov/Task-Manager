@@ -2,6 +2,7 @@ package com.example.taskmanager.web;
 
 import com.example.taskmanager.data.Task;
 import com.example.taskmanager.data.TaskMapper;
+import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.TaskResponse;
 import com.example.taskmanager.dto.UpdateTaskRequest;
@@ -178,7 +179,7 @@ public class TaskController {
             @ApiResponse(responseCode = "200", description = "List of tasks by state")
     })
     @GetMapping("/state/{state}")
-    public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable @ValidateTaskState String state) {
+    public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable @ValidateTaskState TaskState state) {
         List<Task> tasksByState = taskService.getTasksByState(state);
         List<TaskResponse> responses = mapTaskToResponse(tasksByState);
         return ResponseEntity.ok(responses);

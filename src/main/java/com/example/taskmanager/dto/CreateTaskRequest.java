@@ -19,8 +19,8 @@ public record CreateTaskRequest(
         @ExistsInDb
         AppUser assignedUser,
         @ValidateTaskState
-        String state) {
+        TaskState state) {
     public CreateTaskRequest {
-        state = (state != null) ? state : TaskState.TODO.name();
+        state = (state != null) ? state : TaskState.TODO;
     }
 }

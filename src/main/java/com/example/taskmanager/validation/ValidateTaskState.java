@@ -26,7 +26,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ValidateTaskState {
     Class<? extends Enum<?>> enumClass() default TaskState.class;
-    String message() default "Must be TODO, IN_PROGRESS or COMPLETED";
+    String message() default "Must be TODO, IN_PROGRESS, COMPLETED or DELAYED";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }
