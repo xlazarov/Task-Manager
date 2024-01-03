@@ -1,23 +1,24 @@
 package com.example.taskmanager.config;
 
 import com.example.taskmanager.service.TaskService;
-import lombok.Data;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
-import java.time.LocalTime;
+@RequiredArgsConstructor
+public class TaskSchedulerConfig implements SchedulingConfigurer {
 
-@Data
-@Configuration
-@EnableScheduling
-public class TaskSchedulerConfig {
-
-    private LocalTime executionTime;
     private final TaskService taskService;
+    private final TaskSchedulerProperties schedulerProperties;
 
-    @Scheduled(cron = "${task-scheduler.cron-expression}")
-    public void executeScheduledTask() {
-        taskService.updateTaskStateForOverdueTasks();
+    /**
+     * Configures a cron task to update overdue tasks based on the specified cron expression.
+     * The cron expression is retrieved from the {@link TaskSchedulerProperties} instance.
+     *
+     * @param taskRegistrar The registrar for configuring scheduled tasks.
+     */
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        taskRegistrar.addCronTask(taskService::updateTaskStateForOverdueTasks, schedulerProperties.getCronExpression());
     }
 }

@@ -7,13 +7,16 @@ import com.example.taskmanager.data.UserRepository;
 import com.example.taskmanager.service.TaskService;
 import com.example.taskmanager.service.UserService;
 import org.mapstruct.factory.Mappers;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
+@EnableScheduling
 @EnableMBeanExport
+@EnableConfigurationProperties(TaskSchedulerProperties.class)
 public class AppConfig {
 
     @Bean
@@ -37,8 +40,7 @@ public class AppConfig {
     }
 
     @Bean
-    @ConfigurationProperties(prefix = "task-scheduler")
-    public TaskSchedulerConfig taskSchedulerConfig(TaskService taskService) {
-        return new TaskSchedulerConfig(taskService);
+    public TaskSchedulerConfig taskSchedulerConfig(TaskService taskService, TaskSchedulerProperties schedulerProperties) {
+        return new TaskSchedulerConfig(taskService, schedulerProperties);
     }
 }
