@@ -23,24 +23,50 @@ import java.time.LocalDate
 class TaskControllerSpec extends Specification {
     @Shared
     @LocalServerPort
-    private int port = 8080
+    private static int port = 8080
+    @Shared
+    private static final String BASE_URL = "http://localhost:${port}/api/task"
     @Shared
     private TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    int id
+    private int id
     @Shared
-    UpdateTaskRequest updateTaskRequest
+    private UpdateTaskRequest updateTaskRequest
     @Shared
-    CreateTaskRequest createTaskRequest
+    private CreateTaskRequest createTaskRequest
 
     def setupSpec() {
         updateTaskRequest = new UpdateTaskRequest("UpdatedTask", LocalDate.now().plusDays(7), null, TaskState.IN_PROGRESS)
         createTaskRequest = new CreateTaskRequest("TestTask", null, null, TaskState.TODO)
 
-        def taskResponse = restTemplate.postForEntity("http://localhost:${port}/api/task", createTaskRequest, TaskResponse)
+        def taskResponse = restTemplate.postForEntity(BASE_URL, createTaskRequest, TaskResponse)
         assert taskResponse.statusCode == HttpStatus.CREATED
         id = taskResponse.body.id()
+    }
+
+    @Unroll
+    def "should get all tasks"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL, List)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body != null
+    }
+
+    @Unroll
+    def "should get a task by ID #taskId"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL + "/${taskId}", TaskResponse)
+
+        then:
+        response.statusCode == expectedStatusCode
+
+        where:
+        taskId | expectedStatusCode
+        id     | HttpStatus.OK
+        0      | HttpStatus.NOT_FOUND
     }
 
     @Unroll
@@ -49,7 +75,7 @@ class TaskControllerSpec extends Specification {
         def request = new CreateTaskRequest(description, null, null, TaskState.TODO)
 
         when:
-        def response = restTemplate.postForEntity("http://localhost:${port}/api/task", request, TaskResponse)
+        def response = restTemplate.postForEntity(BASE_URL, request, TaskResponse)
 
         then:
         response.statusCode == expectedStatusCode
@@ -66,7 +92,7 @@ class TaskControllerSpec extends Specification {
     @Unroll
     def "should update or return not found for task with ID #taskId"() {
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${taskId}", HttpMethod.PUT, new HttpEntity<>(updateTaskRequest), TaskResponse)
+        def response = restTemplate.exchange(BASE_URL + "/${taskId}", HttpMethod.PUT, new HttpEntity<>(updateTaskRequest), TaskResponse)
 
         then:
         response.statusCode == expectedStatusCode
@@ -83,7 +109,7 @@ class TaskControllerSpec extends Specification {
         def request = new UpdateTaskRequest(null, null, null, state)
 
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
+        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
 
         then:
         response.statusCode == expectedStatusCode
@@ -103,7 +129,7 @@ class TaskControllerSpec extends Specification {
         def request = new UpdateTaskRequest(null, dueDate, null, null)
 
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
+        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
 
         then:
         response.statusCode == expectedStatusCode
@@ -119,13 +145,63 @@ class TaskControllerSpec extends Specification {
     @Unroll
     def "should delete an existing task"() {
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.DELETE, null, Void.class)
+        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.DELETE, null, Void.class)
 
         then:
         response.statusCode == HttpStatus.NO_CONTENT
     }
 
+    @Unroll
+    def "should get tasks by state '#state'"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL + "/state/${state}", List)
 
+        then:
+        response.statusCode == expectedStatusCode
+        response.body != null
+
+        where:
+        state                 | expectedStatusCode
+        TaskState.TODO        | HttpStatus.OK
+        TaskState.IN_PROGRESS | HttpStatus.OK
+        TaskState.COMPLETED   | HttpStatus.OK
+        TaskState.DELAYED     | HttpStatus.OK
+    }
+
+    @Unroll
+    def "should get tasks for user with ID #userId"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL + "/user/${userId}", List)
+
+        then:
+        response.statusCode == expectedStatusCode
+        response.body != null
+
+        where:
+        userId | expectedStatusCode
+        id     | HttpStatus.OK
+        0      | HttpStatus.OK
+    }
+
+    @Unroll
+    def "should get tasks by due date '#dueDate'"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL + "/date/${dueDate}", List)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body != null
+
+        and:
+        // Checks if "state" is set to "DELAYED" if "dueDate" is in the past
+        response.body.every { task ->
+            dueDate.isBefore(LocalDate.now()) ? task.state == TaskState.DELAYED : true
+        }
+
+        where:
+        dueDate                      | expectedStatusCode
+        LocalDate.now().plusDays(7)  | HttpStatus.OK
+        LocalDate.now()              | HttpStatus.OK
+        LocalDate.now().minusDays(7) | HttpStatus.OK
+    }
 }
-
-

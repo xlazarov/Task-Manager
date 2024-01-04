@@ -204,7 +204,7 @@ public class TaskController {
             @ApiResponse(responseCode = "200", description = "List of tasks by due date")
     })
     @GetMapping("/date/{dueDate}")
-    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable @Future LocalDate dueDate) {
+    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable LocalDate dueDate) {
         log.info("Endpoint /api/task/date called: getTasksByDueDate");
         List<Task> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
         List<TaskResponse> responses = mapTaskToResponse(tasksByDueDate);

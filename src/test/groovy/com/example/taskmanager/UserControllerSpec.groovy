@@ -17,24 +17,50 @@ import spock.lang.Unroll
 class UserControllerSpec extends Specification {
     @Shared
     @LocalServerPort
-    private int port = 8080
+    private static int port = 8080
+    @Shared
+    private static final String BASE_URL = "http://localhost:${port}/api/user"
     @Shared
     private TestRestTemplate restTemplate = new TestRestTemplate()
 
     @Shared
-    int id
+    private int id
     @Shared
-    UpdateUserRequest updateUserRequest
+    private UpdateUserRequest updateUserRequest
     @Shared
-    CreateUserRequest createUserRequest
+    private CreateUserRequest createUserRequest
 
     def setupSpec() {
         updateUserRequest = new UpdateUserRequest("UpdatedUser")
         createUserRequest = new CreateUserRequest("TestUser")
 
-        def userResponse = restTemplate.postForEntity("http://localhost:${port}/api/user", createUserRequest, UserResponse)
+        def userResponse = restTemplate.postForEntity(BASE_URL, createUserRequest, UserResponse)
         assert userResponse.statusCode == HttpStatus.CREATED
         id = userResponse.body.id()
+    }
+
+    @Unroll
+    def "should get all users"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL, List)
+
+        then:
+        response.statusCode == HttpStatus.OK
+        response.body != null
+    }
+
+    @Unroll
+    def "should get a user by ID #userId"() {
+        when:
+        def response = restTemplate.getForEntity(BASE_URL + "/${userId}", UserResponse)
+
+        then:
+        response.statusCode == expectedStatusCode
+
+        where:
+        userId | expectedStatusCode
+        id     | HttpStatus.OK
+        0      | HttpStatus.NOT_FOUND
     }
 
     @Unroll
@@ -43,7 +69,7 @@ class UserControllerSpec extends Specification {
         def request = new CreateUserRequest(username)
 
         when:
-        def response = restTemplate.postForEntity("http://localhost:${port}/api/user", request, UserResponse)
+        def response = restTemplate.postForEntity(BASE_URL, request, UserResponse)
 
         then:
         response.statusCode == expectedStatusCode
@@ -60,7 +86,7 @@ class UserControllerSpec extends Specification {
     @Unroll
     def "should update or return not found for user with ID #userId"() {
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/user/${userId}", HttpMethod.PUT, new HttpEntity<>(updateUserRequest), UserResponse)
+        def response = restTemplate.exchange(BASE_URL + "/${userId}", HttpMethod.PUT, new HttpEntity<>(updateUserRequest), UserResponse)
 
         then:
         response.statusCode == expectedStatusCode
@@ -74,7 +100,7 @@ class UserControllerSpec extends Specification {
     @Unroll
     def "should delete an existing user"() {
         when:
-        def response = restTemplate.exchange("http://localhost:${port}/api/user/${id}", HttpMethod.DELETE, null, Void.class)
+        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.DELETE, null, Void.class)
 
         then:
         response.statusCode == HttpStatus.NO_CONTENT
