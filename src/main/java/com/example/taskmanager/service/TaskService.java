@@ -2,6 +2,7 @@ package com.example.taskmanager.service;
 
 import com.example.taskmanager.data.Task;
 import com.example.taskmanager.data.TaskRepository;
+import com.example.taskmanager.data.TaskState;
 import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.UpdateTaskRequest;
 import jakarta.annotation.Nonnull;
@@ -103,7 +104,7 @@ public class TaskService {
      * @return List of tasks with the specified state.
      */
     @Nonnull
-    public List<Task> getTasksByState(@Nonnull String state) {
+    public List<Task> getTasksByState(@Nonnull TaskState state) {
         return taskRepository.findByState(state);
     }
 
@@ -127,5 +128,14 @@ public class TaskService {
     @Nonnull
     public List<Task> getTasksByDueDate(@Nonnull LocalDate dueDate) {
         return taskRepository.findByDueDate(dueDate);
+    }
+
+    public void updateTaskStateForOverdueTasks() {
+        List<Task> overdueTasks = taskRepository.findByDueDateAndState(LocalDate.now(), TaskState.TODO);
+
+        for (Task task : overdueTasks) {
+            task.setState(TaskState.DELAYED);
+            taskRepository.save(task);
+        }
     }
 }

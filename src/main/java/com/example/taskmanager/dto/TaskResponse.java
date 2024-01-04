@@ -5,5 +5,5 @@ import com.example.taskmanager.data.TaskState;
 
 import java.time.LocalDate;
 
-public record TaskResponse(Integer id, String description, LocalDate dueDate, AppUser assignedUser, String state) {
+public record TaskResponse(Integer id, String description, LocalDate dueDate, AppUser assignedUser, TaskState state) {
 }
