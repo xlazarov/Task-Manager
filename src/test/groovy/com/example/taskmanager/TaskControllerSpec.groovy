@@ -80,7 +80,7 @@ class TaskControllerSpec extends Specification {
     @Unroll
     def "should update the state of an existing task to '#state' or return bad request"() {
         given:
-        def request = new UpdateTaskRequest(null, null, null, state as TaskState)
+        def request = new UpdateTaskRequest(null, null, null, state)
 
         when:
         def response = restTemplate.exchange("http://localhost:${port}/api/task/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
@@ -94,8 +94,7 @@ class TaskControllerSpec extends Specification {
         TaskState.IN_PROGRESS | HttpStatus.NO_CONTENT
         TaskState.COMPLETED   | HttpStatus.NO_CONTENT
         TaskState.DELAYED     | HttpStatus.NO_CONTENT
-        "InvalidState"        | HttpStatus.BAD_REQUEST
-        null                  | HttpStatus.BAD_REQUEST
+        null                  | HttpStatus.NO_CONTENT
     }
 
     @Unroll

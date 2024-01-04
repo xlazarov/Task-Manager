@@ -20,7 +20,6 @@ import java.util.Map;
 @Slf4j
 public class ErrorHandler {
 
-
     /**
      * Handles ConstraintViolationException and returns a BAD_REQUEST response.
      *
