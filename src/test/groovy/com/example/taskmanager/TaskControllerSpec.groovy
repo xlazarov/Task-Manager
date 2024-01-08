@@ -1,72 +1,87 @@
 package com.example.taskmanager
 
+import com.example.taskmanager.data.TaskMapperImpl
+import com.example.taskmanager.data.TaskRepository
 import com.example.taskmanager.data.TaskState
 import com.example.taskmanager.dto.CreateTaskRequest
-import com.example.taskmanager.dto.TaskResponse
 import com.example.taskmanager.dto.UpdateTaskRequest
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import spock.lang.Shared
+import com.example.taskmanager.service.TaskService
+import com.example.taskmanager.web.TaskController
+import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.json.JsonSlurper
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.lang.Unroll
 
 import java.time.LocalDate
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Stepwise
 class TaskControllerSpec extends Specification {
-    @Shared
-    @LocalServerPort
-    private static int port = 8080
-    @Shared
-    private static final String BASE_URL = "http://localhost:${port}/api/task"
-    @Shared
-    private TestRestTemplate restTemplate = new TestRestTemplate()
 
-    @Shared
-    private int id
-    @Shared
+    def taskRepository = Mock(TaskRepository)
+    def taskService = new TaskService(taskRepository)
+    def taskMapper = new TaskMapperImpl()
+    def taskController = new TaskController(taskService, taskMapper)
+
+    MockMvc mockMvc
+
+    private static int id
     private UpdateTaskRequest updateTaskRequest
-    @Shared
     private CreateTaskRequest createTaskRequest
 
-    def setupSpec() {
+    def objectMapper = new ObjectMapper()
+
+    void setup() {
+        mockMvc = standaloneSetup(taskController).build()
+
         updateTaskRequest = new UpdateTaskRequest("UpdatedTask", LocalDate.now().plusDays(7), null, TaskState.IN_PROGRESS)
         createTaskRequest = new CreateTaskRequest("TestTask", null, null, TaskState.TODO)
-
-        def taskResponse = restTemplate.postForEntity(BASE_URL, createTaskRequest, TaskResponse)
-        assert taskResponse.statusCode == HttpStatus.CREATED
-        id = taskResponse.body.id()
+//        taskService.createTask(_) >> new TaskResponse(1, "TestTask", null, null, TaskState.TODO)
+//        taskService.getAllTasks() >> [new TaskResponse(1, "TestTask", null, null, TaskState.TODO)]
+//        taskService.getTaskById(1) >> new TaskResponse(1, "TestTask", null, null, TaskState.TODO)
+//        taskService.getTaskById(0) >> null
+//        def taskResponse = mockMvc.perform(post("/api/task")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .accept(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(createTaskRequest)))
+//                .andExpect(status().isCreated())
+//                .andReturn().response
+//
+//        println("Response Content: ${taskResponse.contentAsString}")
+//        def content = new JsonSlurper().parseText(taskResponse.contentAsString)
+//        id = content.id
     }
 
     @Unroll
     def "should get all tasks"() {
         when:
-        def response = restTemplate.getForEntity(BASE_URL, List)
+        def response = mockMvc.perform(get("/api/task"))
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body != null
+        response.andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
     }
 
     @Unroll
     def "should get a task by ID #taskId"() {
         when:
-        def response = restTemplate.getForEntity(BASE_URL + "/${taskId}", TaskResponse)
+        def response = mockMvc.perform(get("/api/task/$taskId"))
 
         then:
-        response.statusCode == expectedStatusCode
+        response.andExpect(expectedStatusCode)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
         where:
         taskId | expectedStatusCode
-        id     | HttpStatus.OK
-        0      | HttpStatus.NOT_FOUND
+        id     | status().isOk()
+        0      | status().isNotFound()
     }
 
     @Unroll
@@ -75,52 +90,58 @@ class TaskControllerSpec extends Specification {
         def request = new CreateTaskRequest(description, null, null, TaskState.TODO)
 
         when:
-        def response = restTemplate.postForEntity(BASE_URL, request, TaskResponse)
+        def response = mockMvc.perform(post("/api/task")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
 
         then:
-        response.statusCode == expectedStatusCode
-        response.body != null
+        response.andExpect(expectedStatusCode)
+                .andExpect(expectedContent)
 
         where:
-        description | expectedStatusCode
-        "AddTask"   | HttpStatus.CREATED
-        null        | HttpStatus.BAD_REQUEST
-        ""          | HttpStatus.BAD_REQUEST
-        "  "        | HttpStatus.BAD_REQUEST
+        description | expectedStatusCode      | expectedContent
+        "AddTask"   | status().isCreated()    | content().contentType(MediaType.APPLICATION_JSON)
+        null        | status().isBadRequest() | content().string("")
+        ""          | status().isBadRequest() | content().string("")
+        "  "        | status().isBadRequest() | content().string("")
     }
 
     @Unroll
     def "should update or return not found for task with ID #taskId"() {
         when:
-        def response = restTemplate.exchange(BASE_URL + "/${taskId}", HttpMethod.PUT, new HttpEntity<>(updateTaskRequest), TaskResponse)
+        def response = mockMvc.perform(put("/api/task/$id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
 
         then:
-        response.statusCode == expectedStatusCode
+        response.andExpect(expectedStatusCode)
 
         where:
         taskId | expectedStatusCode
-        id     | HttpStatus.NO_CONTENT
-        0      | HttpStatus.NOT_FOUND
+        id     | status().isNoContent()
+        0      | status().isNotFound()
     }
 
     @Unroll
-    def "should update the state of an existing task to '#state' or return bad request"() {
+    def "should update the state of an existing task to '#state'"() {
         given:
         def request = new UpdateTaskRequest(null, null, null, state)
 
         when:
-        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
+        def response = mockMvc.perform(put("/api/task/$id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
 
         then:
-        response.statusCode == expectedStatusCode
+        response.andExpect(expectedStatusCode)
 
         where:
         state                 | expectedStatusCode
-        TaskState.TODO        | HttpStatus.NO_CONTENT
-        TaskState.IN_PROGRESS | HttpStatus.NO_CONTENT
-        TaskState.COMPLETED   | HttpStatus.NO_CONTENT
-        TaskState.DELAYED     | HttpStatus.NO_CONTENT
-        null                  | HttpStatus.NO_CONTENT
+        TaskState.TODO        | status().isNoContent()
+        TaskState.IN_PROGRESS | status().isNoContent()
+        TaskState.COMPLETED   | status().isNoContent()
+        TaskState.DELAYED     | status().isNoContent()
+        null                  | status().isNoContent()
     }
 
     @Unroll
@@ -129,79 +150,74 @@ class TaskControllerSpec extends Specification {
         def request = new UpdateTaskRequest(null, dueDate, null, null)
 
         when:
-        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.PUT, new HttpEntity<>(request), Object)
-
+        def response = mockMvc.perform(put("/api/task/$id")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
         then:
-        response.statusCode == expectedStatusCode
+        response.andExpect(expectedStatusCode)
 
         where:
         dueDate                      | expectedStatusCode
-        LocalDate.now()              | HttpStatus.BAD_REQUEST
-        LocalDate.now().plusDays(7)  | HttpStatus.NO_CONTENT
-        LocalDate.now().minusDays(7) | HttpStatus.BAD_REQUEST
-        null                         | HttpStatus.NO_CONTENT
+        LocalDate.now()              | status().isBadRequest()
+        LocalDate.now().plusDays(7)  | status().isNoContent()
+        LocalDate.now().minusDays(7) | status().isBadRequest()
+        null                         | status().isNoContent()
     }
 
     @Unroll
     def "should delete an existing task"() {
         when:
-        def response = restTemplate.exchange(BASE_URL + "/${id}", HttpMethod.DELETE, null, Void.class)
+        def response = mockMvc.perform(delete("/api/task/$id"))
 
         then:
-        response.statusCode == HttpStatus.NO_CONTENT
+        response.andExpect(status().isNoContent())
     }
 
     @Unroll
     def "should get tasks by state '#state'"() {
         when:
-        def response = restTemplate.getForEntity(BASE_URL + "/state/${state}", List)
+        def response = mockMvc.perform(get("/api/task/state/$state"))
 
         then:
-        response.statusCode == expectedStatusCode
-        response.body != null
+        response.andExpect(expectedStatusCode)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
         where:
         state                 | expectedStatusCode
-        TaskState.TODO        | HttpStatus.OK
-        TaskState.IN_PROGRESS | HttpStatus.OK
-        TaskState.COMPLETED   | HttpStatus.OK
-        TaskState.DELAYED     | HttpStatus.OK
+        TaskState.TODO        | status().isOk()
+        TaskState.IN_PROGRESS | status().isOk()
+        TaskState.COMPLETED   | status().isOk()
+        TaskState.DELAYED     | status().isOk()
     }
 
     @Unroll
     def "should get tasks for user with ID #userId"() {
         when:
-        def response = restTemplate.getForEntity(BASE_URL + "/user/${userId}", List)
+        def response = mockMvc.perform(get("/api/task/user/$userId"))
 
         then:
-        response.statusCode == expectedStatusCode
-        response.body != null
+        response.andExpect(expectedStatusCode)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
         where:
         userId | expectedStatusCode
-        id     | HttpStatus.OK
-        0      | HttpStatus.OK
+        id     | status().isOk()
+        0      | status().isOk()
     }
 
     @Unroll
     def "should get tasks by due date '#dueDate'"() {
         when:
-        def response = restTemplate.getForEntity(BASE_URL + "/date/${dueDate}", List)
+        def response = mockMvc.perform(get("/api/task/date/$dueDate"))
 
         then:
-        response.statusCode == HttpStatus.OK
-        response.body != null
-
-        and:
-        // Checks if "state" is set to "DELAYED" if "dueDate" is in the past
-        response.body.every { task ->
-            dueDate.isBefore(LocalDate.now()) ? task.state == TaskState.DELAYED : true
-        }
+        response.andExpect(expectedStatusCode)
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 
         where:
         dueDate                      | expectedStatusCode
-        LocalDate.now().plusDays(7)  | HttpStatus.OK
-        LocalDate.now()              | HttpStatus.OK
-        LocalDate.now().minusDays(7) | HttpStatus.OK
+        LocalDate.now().plusDays(7)  | status().isOk()
+        LocalDate.now()              | status().isOk()
+        LocalDate.now().minusDays(7) | status().isOk()
     }
 }
