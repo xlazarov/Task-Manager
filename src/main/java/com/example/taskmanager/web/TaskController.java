@@ -11,8 +11,8 @@ import com.example.taskmanager.validation.ValidateTaskState;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Future;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/task")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class TaskController {
 
     private final TaskService taskService;
@@ -74,6 +75,7 @@ public class TaskController {
     })
     @GetMapping
     public ResponseEntity<List<TaskResponse>> getAllTasks() {
+        log.info("Endpoint /api/task called: getAllTasks");
         List<Task> tasks = taskService.getAllTasks();
         List<TaskResponse> responses = mapTaskToResponse(tasks);
         return ResponseEntity.ok(responses);
@@ -91,6 +93,7 @@ public class TaskController {
     })
     @GetMapping("/{taskId}")
     public ResponseEntity<TaskResponse> getTask(@PathVariable Integer taskId) {
+        log.info("Endpoint /api/task called: getTask");
         Optional<Task> task = taskService.getTaskById(taskId);
         if (task.isPresent()) {
             TaskResponse response = mapTaskToResponse(task.get());
@@ -111,6 +114,7 @@ public class TaskController {
     })
     @PostMapping
     public ResponseEntity<TaskResponse> addTask(@Valid @RequestBody CreateTaskRequest request) {
+        log.info("Endpoint /api/task called: addTask");
         Task createdTask = taskService.addTask(request);
         TaskResponse response = mapTaskToResponse(createdTask);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -131,6 +135,7 @@ public class TaskController {
     @PutMapping("/{taskId}")
     public ResponseEntity<Void> updateTask(@PathVariable Integer taskId,
                                            @Valid @RequestBody UpdateTaskRequest request) {
+        log.info("Endpoint /api/task called: updateTask");
         Optional<Task> updatedTask = taskService.updateTask(taskId, request);
         if (updatedTask.isPresent()) {
             return ResponseEntity.noContent().build();
@@ -149,6 +154,7 @@ public class TaskController {
     })
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(@PathVariable Integer taskId) {
+        log.info("Endpoint /api/task called: deleteTask");
         taskService.deleteTask(taskId);
         return ResponseEntity.noContent().build();
     }
@@ -164,6 +170,7 @@ public class TaskController {
     })
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<TaskResponse>> getTasksForUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/task/user called: getTasksForUser");
         List<Task> userTasks = taskService.getTasksForUser(userId);
         List<TaskResponse> responses = mapTaskToResponse(userTasks);
         return ResponseEntity.ok(responses);
@@ -180,6 +187,7 @@ public class TaskController {
     })
     @GetMapping("/state/{state}")
     public ResponseEntity<List<TaskResponse>> getTasksByState(@PathVariable @ValidateTaskState TaskState state) {
+        log.info("Endpoint /api/task/state called: getTasksByState");
         List<Task> tasksByState = taskService.getTasksByState(state);
         List<TaskResponse> responses = mapTaskToResponse(tasksByState);
         return ResponseEntity.ok(responses);
@@ -195,7 +203,8 @@ public class TaskController {
             @ApiResponse(responseCode = "200", description = "List of tasks by due date")
     })
     @GetMapping("/date/{dueDate}")
-    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable @Future LocalDate dueDate) {
+    public ResponseEntity<List<TaskResponse>> getTasksByDueDate(@PathVariable LocalDate dueDate) {
+        log.info("Endpoint /api/task/date called: getTasksByDueDate");
         List<Task> tasksByDueDate = taskService.getTasksByDueDate(dueDate);
         List<TaskResponse> responses = mapTaskToResponse(tasksByDueDate);
         return ResponseEntity.ok(responses);

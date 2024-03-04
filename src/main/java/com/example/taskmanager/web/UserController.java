@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class UserController {
 
     private final UserService userService;
@@ -71,6 +73,7 @@ public class UserController {
     })
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
+        log.info("Endpoint /api/user called: getAllUsers");
         List<AppUser> users = userService.getAllUsers();
         List<UserResponse> userResponses = mapUserToResponse(users);
         return ResponseEntity.ok(userResponses);
@@ -88,6 +91,7 @@ public class UserController {
     })
     @GetMapping("/{userId}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/user called: getUser");
         Optional<AppUser> user = userService.getUserById(userId);
         if (user.isPresent()) {
             UserResponse userResponse = mapUserToResponse(user.get());
@@ -108,6 +112,7 @@ public class UserController {
     })
     @PostMapping
     public ResponseEntity<UserResponse> addUser(@Valid @RequestBody CreateUserRequest request) {
+        log.info("Endpoint /api/user called: addUser");
         AppUser createdUser = userService.addUser(request);
         UserResponse userResponse = mapUserToResponse(createdUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
@@ -128,6 +133,7 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<Void> updateUser(@PathVariable Integer userId,
                                                    @Valid @RequestBody UpdateUserRequest request) {
+        log.info("Endpoint /api/user called: updateUser");
         Optional<AppUser> updatedUser = userService.updateUser(userId, request);
         if (updatedUser.isPresent()) {
             return ResponseEntity.noContent().build();
@@ -146,6 +152,7 @@ public class UserController {
     })
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable Integer userId) {
+        log.info("Endpoint /api/user called: deleteUser");
         userService.deleteUser(userId);
         return ResponseEntity.noContent().build();
     }

@@ -7,6 +7,7 @@ import com.example.taskmanager.dto.CreateTaskRequest;
 import com.example.taskmanager.dto.UpdateTaskRequest;
 import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Optional;
  * Service layer responsible for managing tasks.
  */
 @RequiredArgsConstructor
+@Slf4j
 public class TaskService {
 
     private final TaskRepository taskRepository;
@@ -30,6 +32,10 @@ public class TaskService {
      */
     @Nonnull
     public Optional<Task> getTaskById(@Nonnull Integer taskId) {
+        if (taskId == null) {
+            throw new NullPointerException("Task id cannot be null");
+        }
+        log.info("Fetching task with id: {}", taskId);
         return taskRepository.findById(taskId);
     }
 
@@ -40,6 +46,7 @@ public class TaskService {
      */
     @Nonnull
     public List<Task> getAllTasks() {
+        log.info("Fetching all tasks");
         return taskRepository.findAll();
     }
 
@@ -51,25 +58,28 @@ public class TaskService {
      */
     @Nonnull
     public Task addTask(@Nonnull CreateTaskRequest request) {
+        log.info("Adding a new task: {}", request);
         Task task = new Task();
         task.setDescription(request.description());
         task.setDueDate(request.dueDate());
         task.setAssignedUser(request.assignedUser());
         task.setState(request.state());
         taskRepository.save(task);
+        log.info("Added a new task: {}", task);
         return task;
     }
 
     /**
      * Updates an existing task in the system.
      *
-     * @param id      The unique identifier of the task to update.
+     * @param taskId      The unique identifier of the task to update.
      * @param request The request containing updated task details.
      * @return The updated task.
      */
     @Nonnull
-    public Optional<Task> updateTask(@Nonnull Integer id, @Nonnull UpdateTaskRequest request) {
-        Optional<Task> task = taskRepository.findById(id);
+    public Optional<Task> updateTask(@Nonnull Integer taskId, @Nonnull UpdateTaskRequest request) {
+        log.info("Updating task with id {}: {}", taskId, request);
+        Optional<Task> task = taskRepository.findById(taskId);
         if (task.isPresent()) {
             if (Objects.nonNull(request.description())) {
                 task.get().setDescription(request.description());
@@ -84,6 +94,7 @@ public class TaskService {
                 task.get().setState(request.state());
             }
             taskRepository.save(task.get());
+            log.info("Updated task: {}", task.get());
         }
         return task;
     }
@@ -94,6 +105,7 @@ public class TaskService {
      * @param taskId The unique identifier of the task to delete.
      */
     public void deleteTask(@Nonnull Integer taskId) {
+        log.info("Deleting task with id: {}", taskId);
         taskRepository.deleteById(taskId);
     }
 
@@ -105,6 +117,7 @@ public class TaskService {
      */
     @Nonnull
     public List<Task> getTasksByState(@Nonnull TaskState state) {
+        log.info("Fetching tasks by state: {}", state);
         return taskRepository.findByState(state);
     }
 
@@ -116,6 +129,7 @@ public class TaskService {
      */
     @Nonnull
     public List<Task> getTasksForUser(@Nonnull Integer userId) {
+        log.info("Fetching tasks for user with id: {}", userId);
         return taskRepository.findByAssignedUserId(userId);
     }
 
@@ -127,15 +141,24 @@ public class TaskService {
      */
     @Nonnull
     public List<Task> getTasksByDueDate(@Nonnull LocalDate dueDate) {
+        log.info("Fetching tasks by due date: {}", dueDate);
         return taskRepository.findByDueDate(dueDate);
     }
 
+    /**
+     * Updates the state for overdue tasks.
+     * Fetches tasks with a due date equal to the current date and updates the state to DELAYED
+     * for tasks that are currently in TO-DO state.
+     */
     public void updateTaskStateForOverdueTasks() {
+        log.info("Updating state for overdue tasks");
         List<Task> overdueTasks = taskRepository.findByDueDateAndState(LocalDate.now(), TaskState.TODO);
 
         for (Task task : overdueTasks) {
             task.setState(TaskState.DELAYED);
             taskRepository.save(task);
+            log.info("Updated state for task: {}", task);
         }
+        log.info("Updated state for {} overdue tasks", overdueTasks.size());
     }
 }
