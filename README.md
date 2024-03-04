@@ -1,4 +1,4 @@
-# task-manager
+# Task-Manager
 
 This is a Java web application built with Spring Boot and managed with Gradle. It's a simple app for managing tasks and users.
 
