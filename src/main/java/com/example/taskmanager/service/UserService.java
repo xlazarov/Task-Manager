@@ -41,6 +41,9 @@ public class UserService {
      */
     @Nonnull
     public Optional<AppUser> getUserById(@Nonnull Integer userId) {
+        if (userId == null) {
+            throw new NullPointerException("User id cannot be null");
+        }
         log.info("Fetching user with id: {}", userId);
         return userRepository.findById(userId);
     }

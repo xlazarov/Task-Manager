@@ -32,6 +32,9 @@ public class TaskService {
      */
     @Nonnull
     public Optional<Task> getTaskById(@Nonnull Integer taskId) {
+        if (taskId == null) {
+            throw new NullPointerException("Task id cannot be null");
+        }
         log.info("Fetching task with id: {}", taskId);
         return taskRepository.findById(taskId);
     }
